@@ -8,6 +8,8 @@ const int DHTPIN = 2;       //Đọc dữ liệu từ DHT11 ở chân 2 trên m�
 const int DHTTYPE = DHT11;  
 DHT dht(DHTPIN, DHTTYPE);
 String sttXe;
+String phrase;
+float h,t;
 #define IN1 7
 #define IN2 8
 #define IN3 9
@@ -17,10 +19,17 @@ void setup()
   Serial.begin(115200);
   Wire.begin(8);
   Wire.onReceive(receiveEvent);
+  Wire.onRequest(requestEvent);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
+}
+void requestEvent() {
+  phrase="";
+  phrase= String(t) +"," + String(h);
+  Serial.println(phrase.c_str());
+  Wire.write(phrase.c_str());  /*send string on request */
 }
 void receiveEvent(int howMany) {
   sttXe="";
@@ -40,6 +49,9 @@ void loop()
     Left();
   if (sttXe == "right")
     Right();  
+   h = dht.readHumidity();    
+   t = dht.readTemperature();        
+  delay(5000);        
 }
 void Up()
 {

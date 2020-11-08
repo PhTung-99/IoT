@@ -4,7 +4,9 @@
 SocketIoClient webSocket;
 const char* ssid = "PT";          //Tên mạng Wifi mà Socket server của bạn đang kết nối
 const char* password = "111222333";  //Pass mạng wifi ahihi, anh em rãnh thì share pass cho mình với.
- 
+String DoAmH, NhietDoT;
+float tempH, tempT;
+String str, tempStr;
 char host[] = "192.168.1.43";  //Địa chỉ IP dịch vụ, hãy thay đổi nó theo địa chỉ IP Socket server của bạn.
 int port = 3000;  
 void messageEvenetHandler(const char * payload, size_t length) {
@@ -38,12 +40,44 @@ void setup() {
 }
 uint64_t messageTimestamp;
 void loop() {
+  str="";
   webSocket.loop();
   uint64_t now = millis();
-  if (now - messageTimestamp > 100) {
+  if (now - messageTimestamp > 1000) {
     messageTimestamp = now;
-    // Send event
-    webSocket.emit("message", "\"this is a message from the client\"");
+    
+    if(DoAmH.toFloat() != tempH || NhietDoT.toFloat() != tempT )
+    {
+      tempStr = "{\"DoAm\":\"" + DoAmH +"\", \"NhietDo\":\"" + NhietDoT +"\"}";
+      webSocket.emit("DTH11", tempStr.c_str());
+      tempH = DoAmH.toFloat();
+      tempT= NhietDoT.toFloat();
+    }
+    webSocket.emit("DTH11", tempStr.c_str());
+    
+    
   }
-  
+  Wire.requestFrom(8, 11); /* request & read data of size 13 from slave */
+  while(Wire.available()){
+    char c = Wire.read();
+    str  = String(str + c);
+    NhietDoT = getValue(str, ',', 0);
+    DoAmH = getValue(str, ',', 1);
+    
+ }
+}
+String getValue(String data, char separator, int index)
+{
+    int found = 0;
+    int strIndex[] = { 0, -1 };
+    int maxIndex = data.length() - 1;
+ 
+    for (int i = 0; i <= maxIndex && found <= index; i++) {
+        if (data.charAt(i) == separator || i == maxIndex) {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i+1 : i;
+        }
+    }
+    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }

@@ -1,10 +1,11 @@
+const { json } = require('express');
 var express = require('express');  
 const { Socket } = require('net');
 const { emit } = require('process');
 var app = express();  
 var server = require('http').createServer(app); 
 var io = require('socket.io')(server); 
-
+var dth11 = '{"teamId":"4","status":"pending"}';
 //keep track of how times clients have clicked the button
 
 app.use(express.static(__dirname + '/public')); 
@@ -27,13 +28,32 @@ io.on('connection', function(client) {
     });
     client.on('right', function(data) {
         io.emit('sttXe', "right");
-        console.log("Client  cvbn..."); 
+        var parse_obj = JSON.parse(dth11);
+        
+        //dateJson = '{"Time":"'+getNow()+'"}';
+        dateJson = JSON.parse('{"Time":"'+getNow()+'"}');
+        var text = Object.assign(dateJson, parse_obj)
+        console.log(dateJson);
+        console.log(parse_obj);
+        console.log(text);
     });
     client.on('message', function(data) {
         console.log(data); 
+    });
+    client.on('DTH11', function(data) {
+        console.log(data);
     });
 });
 //start our web server and socket.io server listening
 server.listen(3000, function(){
   console.log('listening on *:3000');
 }); 
+
+function getNow()
+{
+    var today = new Date();
+    var date = today.getDate()+'/'+(today.getMonth()+1)+'/'+today.getFullYear();
+    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    var dateTime = time+'-'+date
+    return dateTime;
+}
