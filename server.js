@@ -1,3 +1,4 @@
+const { WSASERVICE_NOT_FOUND } = require('constants');
 const { json } = require('express');
 var express = require('express');  
 const { Socket } = require('net');
@@ -6,8 +7,23 @@ var app = express();
 var server = require('http').createServer(app); 
 var io = require('socket.io')(server); 
 var dth11 = '{"teamId":"4","status":"pending"}';
-//keep track of how times clients have clicked the button
+var myDb, collection;
+const mongoClient = require('mongodb').MongoClient
 
+const url = "mongodb://localhost:27017"
+
+app.use(express.json())
+
+mongoClient.connect(url, (err, db) => {
+
+    if (err) {
+        console.log("Error while connecting mongo client")
+    } else {
+
+        myDb = db.db('DTH11')
+        collection = myDb.collection('Log')
+    }
+});
 app.use(express.static(__dirname + '/public')); 
 //redirect / to our index.html file
 app.get('/', function(req, res,next) {  
@@ -32,17 +48,21 @@ io.on('connection', function(client) {
         
         //dateJson = '{"Time":"'+getNow()+'"}';
         dateJson = JSON.parse('{"Time":"'+getNow()+'"}');
-        var text = Object.assign(dateJson, parse_obj)
-        console.log(dateJson);
-        console.log(parse_obj);
-        console.log(text);
-    });
-    client.on('message', function(data) {
-        console.log(data); 
+        var timeDTH11 = Object.assign(dateJson, parse_obj)
+        saveData(timeDTH11);
+            
     });
     client.on('DTH11', function(data) {
-        console.log(data);
+        data = '{"teamId":"4","status":"pending"}';
+        var parse_obj = JSON.parse(data);
+        dateJson = JSON.parse('{"Time":"'+getNow()+'"}');
+        var timeDTH11 = Object.assign(dateJson, parse_obj)
+        saveData(timeDTH11);
     });
+});
+io.on('disconnection', function(client) { 
+    console.log("Disconnect");
+    db.close();
 });
 //start our web server and socket.io server listening
 server.listen(3000, function(){
@@ -56,4 +76,15 @@ function getNow()
     var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
     var dateTime = time+'-'+date
     return dateTime;
+}
+function saveData(data) {
+    if(myDb != null && collection != null)
+    {
+        collection.insertOne(data);
+    }
+    else
+    {
+        console.log("Fail to connect collection or database");
+    }
+    
 }

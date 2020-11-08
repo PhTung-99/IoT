@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>Socket.io Demo</title>
+      <title>Control  Robot</title>
       <meta charset="utf-8">
-		<link rel="stylesheet" href="styles.css">
    </head>
    <body>
-		 <h1>Socket.io Demo</h1>	 
-		 <p id="buttonCount">The button has been clicked 0 times.</p>
-		 <button onclick="buttonUp()" onmousedown="buttonUpRelease()">UP</button>
+		 <h1>Control Movement </h1>	 
+		 <button onclick="buttonUp()" onmousedown="buttonUpRelease()" onmouseup="StayCar()">UP</button>
 		 <button onclick="buttonDown()" onmousedown="buttonDownRelease()">DOWN</button>
 		 <button onclick="buttonLeft()" onmousedown="buttonLeftRelease()">Left</button>
 		 <button onclick="buttonRight()" onmousedown="buttonRightRelease()">Right</button>
@@ -27,12 +25,12 @@
 			 }
 			 function buttonRight(){
 			   socket.emit('right');
-             }
-         
-			 //when we receive buttonUpdate, do this
-			 socket.on('buttonUpdate', function(data){
-				 document.getElementById("buttonCount").innerHTML = 'The button has been clicked ' + data + ' times.';
-			 });
+			 }
+			 function StayCar(){
+				socket.emit('stay');
+			 }
+
 		</script>
+		
    </body>
 </html>
