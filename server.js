@@ -1,19 +1,13 @@
-const { WSASERVICE_NOT_FOUND } = require('constants');
-const { json } = require('express');
 var express = require('express');  
-const { Socket } = require('net');
-const { emit } = require('process');
 var app = express();  
 var server = require('http').createServer(app); 
 var io = require('socket.io')(server); 
 var dth11 = '{"teamId":"4","status":"pending"}';
-var myDb, collection;
+var myDb, myCollection;
 const mongoClient = require('mongodb').MongoClient
-
 const url = "mongodb://localhost:27017"
 
 app.use(express.json())
-
 mongoClient.connect(url, (err, db) => {
 
     if (err) {
@@ -21,7 +15,7 @@ mongoClient.connect(url, (err, db) => {
     } else {
 
         myDb = db.db('DTH11')
-        collection = myDb.collection('Log')
+        myCollection = myDb.collection('Log')
     }
 });
 app.use(express.static(__dirname + '/public')); 
@@ -32,7 +26,6 @@ app.get('/', function(req, res,next) {
 
 io.on('connection', function(client) { 
     console.log('Client connected...'); 
-    
     client.on('up', function(data) {
         io.emit('sttXe', "up");
     });
@@ -50,7 +43,7 @@ io.on('connection', function(client) {
         dateJson = JSON.parse('{"Time":"'+getNow()+'"}');
         var timeDTH11 = Object.assign(dateJson, parse_obj)
         saveData(timeDTH11);
-            
+              
     });
     client.on('DTH11', function(data) {
         data = '{"teamId":"4","status":"pending"}';
@@ -58,6 +51,7 @@ io.on('connection', function(client) {
         dateJson = JSON.parse('{"Time":"'+getNow()+'"}');
         var timeDTH11 = Object.assign(dateJson, parse_obj)
         saveData(timeDTH11);
+        
     });
 });
 io.on('disconnection', function(client) { 
@@ -78,13 +72,23 @@ function getNow()
     return dateTime;
 }
 function saveData(data) {
-    if(myDb != null && collection != null)
+    if(myDb != null && myCollection != null)
     {
-        collection.insertOne(data);
+        myCollection.insertOne(data);
     }
     else
     {
         console.log("Fail to connect collection or database");
     }
-    
+    showDB();
 }
+
+function showDB() {
+    
+    myCollection.find({}).toArray(function (err,result) 
+    {
+        console.log(result);
+    console.log("Finded");   
+});
+}
+ 
